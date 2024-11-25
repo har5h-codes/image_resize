@@ -21,6 +21,7 @@ app.post('/resize', upload.single('image'), async (req, res) => {
     }
 
     try {
+        console.log("trying to resize");
         const width = parseInt(req.body.width) || 800;
         const height = parseInt(req.body.height) || 600;
         const format = req.body.format || 'jpeg';
