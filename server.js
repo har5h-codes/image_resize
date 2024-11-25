@@ -8,10 +8,11 @@ const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cors({
-    origin: '*',
+    origin: ['https://image-resize-psi.vercel.app/'],
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Accept']
 }));
+
 
 app.options('/resize', cors());
 
@@ -22,6 +23,7 @@ app.post('/resize', upload.single('image'), async (req, res) => {
 
     try {
         console.log("trying to resize");
+        
         const width = parseInt(req.body.width) || 800;
         const height = parseInt(req.body.height) || 600;
         const format = req.body.format || 'jpeg';
