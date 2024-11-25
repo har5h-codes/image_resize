@@ -8,7 +8,7 @@ const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cors({
-    origin: ['https://image-resize-psi.vercel.app/'],
+    origin: ['https://image-resize-psi.vercel.app'],
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Accept']
 }));
