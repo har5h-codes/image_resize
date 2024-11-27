@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Resizer</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        button {
+            background: #0070f3;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .preview {
+            margin-top: 20px;
+            text-align: center;
+        }
+        #imagePreview {
+            max-width: 100%;
+            max-height: 500px;
+            display: none;
+            margin-top: 10px;
+        }
+        .loading {
+            display: none;
+            margin: 10px 0;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Image Resizer</h1>
+        <form id="uploadForm">
+            <div class="input-group">
+                <label for="imageInput">Select Image</label>
+                <input type="file" id="imageInput" accept="image/*" required>
+            </div>
+            <div class="input-group">
+                <label for="width">Width (px)</label>
+                <input type="number" id="width" min="1" max="4096" value="800">
+                
+                <label for="height">Height (px)</label>
+                <input type="number" id="height" min="1" max="4096" value="600">
+                
+                <label for="format">Format</label>
+                <select id="format">
+                    <option value="jpeg">JPEG</option>
+                    <option value="png">PNG</option>
+                    <option value="webp">WebP</option>
+                </select>
+            </div>
+            <button type="submit">Resize Image</button>
+        </form>
+        <div id="loading" class="loading">Processing...</div>
+        <div id="error" class="error"></div>
+        <div class="preview">
+            <img id="imagePreview" alt="Preview">
+            <a id="downloadLink" style="display:none; margin-top:10px;" download>Download</a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const loading = document.getElementById('loading');
+        const downloadLink = document.getElementById('downloadLink');
+        const errorDiv = document.getElementById('error');
+
+        const API_URL = 'https://image-resize-mzb9.onrender.com/resize';
+
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.style.display = 'block';
+                    imagePreview.src = e.target.result;
+                    errorDiv.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!imageInput.files[0]) {
+                errorDiv.textContent = 'Please select an image first';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', imageInput.files[0]);
+            formData.append('width', document.getElementById('width').value);
+            formData.append('height', document.getElementById('height').value);
+            formData.append('format', document.getElementById('format').value);
+
+            loading.style.display = 'block';
+            downloadLink.style.display = 'none';
+            errorDiv.style.display = 'none';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'cors'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                
+                imagePreview.src = url;
+                imagePreview.style.display = 'block';
+                
+                downloadLink.href = url;
+                downloadLink.download = `resized.${document.getElementById('format').value}`;
+                downloadLink.style.display = 'block';
+            } catch (error) {
+                console.error('Error:', error);
+                errorDiv.textContent = 'Error resizing image. Please try again.';
+                errorDiv.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
