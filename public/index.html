@@ -53,6 +53,11 @@
             display: none;
             margin: 10px 0;
         }
+        .error {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -80,6 +85,7 @@
             <button type="submit">Resize Image</button>
         </form>
         <div id="loading" class="loading">Processing...</div>
+        <div id="error" class="error"></div>
         <div class="preview">
             <img id="imagePreview" alt="Preview">
             <a id="downloadLink" style="display:none; margin-top:10px;" download>Download</a>
@@ -92,6 +98,9 @@
         const imagePreview = document.getElementById('imagePreview');
         const loading = document.getElementById('loading');
         const downloadLink = document.getElementById('downloadLink');
+        const errorDiv = document.getElementById('error');
+
+        const API_URL = 'https://image-resize-mzb9.onrender.com/resize';
 
         imageInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -100,6 +109,7 @@
                 reader.onload = (e) => {
                     imagePreview.style.display = 'block';
                     imagePreview.src = e.target.result;
+                    errorDiv.style.display = 'none';
                 };
                 reader.readAsDataURL(file);
             }
@@ -108,6 +118,12 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            if (!imageInput.files[0]) {
+                errorDiv.textContent = 'Please select an image first';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
             const formData = new FormData();
             formData.append('image', imageInput.files[0]);
             formData.append('width', document.getElementById('width').value);
@@ -116,18 +132,18 @@
 
             loading.style.display = 'block';
             downloadLink.style.display = 'none';
+            errorDiv.style.display = 'none';
 
             try {
-                const response = await fetch('https://image-resize-mzb9.onrender.com', {
+                const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: {
-                        'Accept': 'image/*'
-                    },
                     body: formData,
                     mode: 'cors'
                 });
 
-                if (!response.ok) throw new Error('Resize failed');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 const blob = await response.blob();
                 const url = URL.createObjectURL(blob);
@@ -140,7 +156,8 @@
                 downloadLink.style.display = 'block';
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error resizing image. Please try again.');
+                errorDiv.textContent = 'Error resizing image. Please try again.';
+                errorDiv.style.display = 'block';
             } finally {
                 loading.style.display = 'none';
             }
