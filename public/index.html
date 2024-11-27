@@ -58,6 +58,18 @@
             margin-top: 10px;
             display: none;
         }
+        #downloadLink {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 8px 16px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        #downloadLink:hover {
+            background: #45a049;
+        }
     </style>
 </head>
 <body>
@@ -88,7 +100,9 @@
         <div id="error" class="error"></div>
         <div class="preview">
             <img id="imagePreview" alt="Preview">
-            <a id="downloadLink" style="display:none; margin-top:10px;" download>Download</a>
+            <div>
+                <a id="downloadLink" style="display:none;" download>Download Resized Image</a>
+            </div>
         </div>
     </div>
 
@@ -110,6 +124,7 @@
                     imagePreview.style.display = 'block';
                     imagePreview.src = e.target.result;
                     errorDiv.style.display = 'none';
+                    downloadLink.style.display = 'none';
                 };
                 reader.readAsDataURL(file);
             }
@@ -142,6 +157,8 @@
                 });
 
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server response:', errorText);
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
@@ -153,10 +170,10 @@
                 
                 downloadLink.href = url;
                 downloadLink.download = `resized.${document.getElementById('format').value}`;
-                downloadLink.style.display = 'block';
+                downloadLink.style.display = 'inline-block';
             } catch (error) {
                 console.error('Error:', error);
-                errorDiv.textContent = 'Error resizing image. Please try again.';
+                errorDiv.textContent = `Error resizing image: ${error.message}`;
                 errorDiv.style.display = 'block';
             } finally {
                 loading.style.display = 'none';
